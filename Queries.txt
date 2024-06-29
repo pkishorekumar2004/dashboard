@@ -1,0 +1,167 @@
+/login
+
+'SELECT id, Password, Role FROM Users WHERE Username = ?', (username,)
+
+/register:
+
+'INSERT INTO Users (Username, Password, Role, Name, ContactNumber, Email) VALUES (?, ?, ?, ?, ?, ?)',
+            (username, password, role, name, contact_number, email)
+
+Employee Dashboard:
+	/dashboard_employee:
+
+	Fetch Employee name : 'SELECT Username FROM Users WHERE id = ?', (user_id,)
+
+	Fetch Manager name: SELECT u_manager.name AS manager_name
+    	        		FROM Users u_user
+			            JOIN Teams t ON u_user.team_id = t.team_id
+            			JOIN Users u_manager ON t.manager_id = u_manager.id
+		        	    WHERE u_user.id = ? 
+			        	, (user_id,)
+
+	Fetch Work details : '''
+    	        		SELECT id, project_name, project_status, team_id, deadline
+        	    		FROM Projects
+            			WHERE team_id = (
+                			SELECT team_id
+                			FROM Users
+                			WHERE id = ?
+            			)
+        				''', (user_id,)	
+
+	Fetch Team member details: 	'''
+    	    				    SELECT id, name, contactnumber, email
+        	    				FROM Users
+            					WHERE team_id = (
+                					SELECT team_id
+				    	            FROM Users
+                					WHERE id = ?
+            					) AND role = 'Employee' AND id != ?
+        						''', (user_id, user_id)
+
+	Fetch Project Details:  SELECT id, project_name, project_status, team_id, deadline
+    	        			FROM Projects
+        	    			WHERE team_id = (
+            	    			SELECT team_id
+                				FROM Users
+                				WHERE id = ?
+            				)
+        					''', (user_id,))
+
+    Change Password: 
+		/change_password: 'UPDATE Users SET password = ? WHERE id = ?;', (new_password, user_id)	
+
+Manager Dashboard:
+	/dashboard_manager:
+
+	Fetch Manager name:  'SELECT Username FROM Users WHERE id = ?', (user_id,)
+
+	Team Managed by the manager :   '''
+    	        					SELECT u.id, u.name, u.contactnumber, u.email
+        	    					FROM Users u
+            						JOIN Teams t ON u.team_id = t.team_id
+            						WHERE t.manager_id = ?
+        							''', (session['user_id'],)
+
+	Project Managed by the Manager: '''
+    	        					SELECT p.id, p.project_name, p.project_status, p.team_id, p.deadline
+        	    					FROM Projects p
+            						JOIN Teams t ON p.team_id = t.team_id
+            						WHERE t.manager_id = ?
+        							''', (session['user_id'],)
+
+	Update Project Status: 'UPDATE Projects SET project_status = ? WHERE id = ?', (new_status, project_id)
+
+	Change Password:
+		/change_password: 'UPDATE Users SET password = ? WHERE id = ?;', (new_password, user_id)
+
+
+
+
+Administrator Dashboard:
+	/dashboard_administrator:
+
+	Fetch all the employee:'SELECT Username, Role, name, email, contactnumber AS contact FROM Users WHERE Role = ? ORDER BY Username OFFSET ? ROWS FETCH 						 NEXT ? ROWS ONLY', (selected_role, manage_employee_offset, PER_PAGE)        				
+
+	Add employee:
+		/add-employee:
+    			'INSERT INTO Users (Password, Role, name, email, contactnumber) VALUES ( ?, ?, ?, ?, ?)',
+            	(password, role, name, email, contact)
+
+    	Fetch all the manager dropdown:
+    		/fetch_manager:
+    				'SELECT id, name FROM Users WHERE Role = ?', ('manager',)
+
+    Manage Employee
+    	View employee details:
+    		/get_employee_details:
+    			"""
+        		SELECT 
+        		u_user.username,
+        		u_user.name,
+        		u_user.email,
+        		u_user.contactnumber AS contact,
+        		t.team_name,
+        		u_manager.name AS manager_name
+    			FROM Users u_user
+    			JOIN Teams t ON u_user.team_id = t.team_id
+    			JOIN Users u_manager ON t.manager_id = u_manager.id
+    			WHERE u_user.username = ?
+    			""",(username)
+
+    	Manage Employee:
+    		Upadate Employee:
+	    		/update_employee:
+    				"""
+        			UPDATE Users
+        			SET Role = ?, name = ?, email = ?, contactnumber = ?, team_id = ?
+	        		WHERE username = ?
+    				""", (role, name, email, contact, team_id, username)
+
+    		Delete Employee:
+    			/delete_employee:
+    				'DELETE FROM Users WHERE Username = ?', (username_to_delete,)
+    	
+    Manage Project:
+    	Fetch Project details:
+    		/manage_projects:
+    			'SELECT id, project_name, project_status, team_id, deadline FROM Projects'
+    	
+    	Add Project:
+    		/add-project:
+    			'INSERT INTO Projects (project_name, project_status, team_id, deadline) VALUES (?, ?, ?, ?)',
+                           (project_name, project_status, team_id, deadline)
+
+    		Populating Teams Dropdow:
+    			'SELECT team_id, team_name FROM Teams'
+
+    	Delete Project:
+    		/delete_project:
+    			'DELETE FROM Projects WHERE id = ?', (project_id,)
+
+    Manage Teams:
+    	Fetch Team Details:
+    		/manage_teams:
+    			SELECT t.team_id, t.team_name, u.name as manager_name 
+            	FROM teams t
+            	LEFT JOIN users u ON t.manager_id = u.id
+        
+        Add Team:
+        	/add-team:
+        		'INSERT INTO teams (team_name) VALUES (?)', (team_name,)
+        
+        Update Manager:
+        	/update_manager:
+        		'UPDATE teams SET manager_id = ? WHERE team_id = ?', (manager_id, team_id)
+
+    	
+    	Delete Teams:
+    		'DELETE FROM teams WHERE team_id = ?', (team_id,)
+
+
+
+   	Change Password:
+    		/change_password:
+    			'UPDATE Users SET password = ? WHERE id = ?;', (new_password, user_id)
+
+

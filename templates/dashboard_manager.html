@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manager Dashboard</title>
+    <!-- Bootstrap CSS -->
+    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        .container {
+            margin-top: 20px;
+        }
+        .top-bar {
+            background-color: #343a40;
+            color: white;
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .top-bar img {
+            height: 40px;
+            width: auto;
+            margin-right: 10px;
+        }
+        .top-bar h1 {
+            font-size: 1.5rem;
+            margin: 0;
+        }
+        .top-bar form {
+            margin: 0;
+        }
+        .nav-tabs .nav-link.active {
+            background-color: #343a40;
+            color: white;
+        }
+        .modal-content {
+            padding: 20px;
+        }
+        .tab-pane {
+            display: none;
+        }
+        .tab-pane.active {
+            display: block;
+        }
+        .dashboard {
+            display: flex;
+            justify-content: space-around;
+            background-color: #fff;
+            padding: 50px;
+            border-radius: 20px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+            width: 100%;
+        }
+        .panel {
+            text-align: center;
+            padding: 20px;
+            background: #fff;
+            border-radius: 10px;
+            width: 50%; /* Adjust width as needed */
+            height: 270px; /* Adjust height as needed */
+            transition: transform 0.2s;
+            margin: 0 10px; /* Add margin to create gap between panels */
+        }
+        .panel:hover {
+            transform: translateY(-10px);
+        }
+        .panel.completed {
+            border: 2px solid #4caf50;
+        }
+        .panel.in-progress {
+            border: 2px solid #ff9800;
+        }
+        .panel.waiting {
+            border: 2px solid #2196f3;
+        }
+        .panel h2 {
+            margin: 10px 0;
+            color: #333;
+            white-space: nowrap; /* Prevent text wrapping */
+            overflow: hidden; /* Hide overflow text */
+        }
+        .checkmark, .progress-circle, .waiting-icon {
+            font-size: 3em;
+            margin: 20px 0;
+        }
+        .progress-circle {
+            position: relative;
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            background: conic-gradient(#4caf50 65%, #e0e0e0 0%);
+            margin: 0 auto;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #fff;
+            font-weight: bold;
+        }
+        .waiting-icon {
+            color: #2196f3;
+        }
+        .panel p {
+            font-size: 1.1em;
+            color: #666;
+        }
+
+        /* Custom active tab style */
+        .nav-link.active {
+            background-color: #343a40 !important;
+            color: white !important;
+        }
+        .overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+}
+
+.overlay-content {
+    background-color: white;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    padding: 20px;
+    width: 300px;
+    max-width: 80%;
+    text-align: center;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.overlay-content h2 {
+    margin-bottom: 20px;
+}
+.top-bar {
+    background-color: #343a40;
+    color: white;
+    padding: 10px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.action-buttons {
+    display: flex;
+    align-items: center;
+}
+
+#change-password-link {
+    text-decoration: none;
+    color: black;
+    background-color: #f8f9fa; /* Adjust background color */
+    border: 1px solid #f8f9fa; /* Adjust border */
+    padding: 8px 12px; /* Adjust padding */
+    margin-right: 10px; /* Optional margin between Change Password and Logout */
+}
+
+#change-password-link:hover {
+    background-color: #6c757d; /* Adjust hover background color */
+    border-color: #6c757d; /* Adjust hover border color */
+}
+
+
+    </style>
+</head>
+<body>
+    <div class="top-bar">
+    <div>
+        <img src="static\logo.png" alt="Company Logo" style="height: 40px; width: auto;">
+        CYPHERWAVE
+    </div>
+    <div class="action-buttons">
+        <a href="#" id="change-password-link" class="btn btn-light">Change Password</a>
+        <form action="/logout" method="post">
+            <button type="submit" class="btn btn-light">Logout</button>
+        </form>
+    </div>
+</div>
+<div class="overlay" id="overlay">
+    <div class="overlay-content">
+        <h2>Change Password</h2>
+        <form id="change-password-form">
+            <label for="new-password">New Password:</label>
+            <input type="password" id="new-password" name="new-password" required><br><br>
+            
+            <label for="confirm-password">Confirm Password:</label>
+            <input type="password" id="confirm-password" name="confirm-password" required><br><br>
+            
+            <button type="submit" class="btn btn-primary">Save</button>
+            <button type="button" class="btn btn-secondary" onclick="closeOverlay()">Cancel</button>
+        </form>
+    </div>
+</div>
+
+    <div class="container">
+        <h1 class="my-4 text-center">Manager Dashboard</h1>
+        <h3 class="text-center">Welcome, {{ manager_name }}</h3>
+
+        <!-- Nav tabs -->
+        <ul class="nav nav-tabs" id="myTab" role="tablist">
+            <li class="nav-item">
+                <a class="nav-link active" id="team-assigned-tab" data-toggle="tab" href="#team-assigned" role="tab" aria-controls="team-assigned" aria-selected="true">Team Assigned</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" id="work-details-tab" data-toggle="tab" href="#work-details" role="tab" aria-controls="work-details" aria-selected="false">Work Details</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" id="completion-status-tab" data-toggle="tab" href="#completion-status" role="tab" aria-controls="completion-status" aria-selected="false">Completion Status</a>
+            </li>
+        </ul>
+        
+        <!-- Tab panes -->
+        <div class="tab-content">
+            <div class="tab-pane fade show active" id="team-assigned" role="tabpanel" aria-labelledby="team-assigned-tab">
+                <!-- Team Assigned content -->
+                <div class="card">
+                    <div class="card-body">
+                        <div class="team-members-box">
+                            <h5>Team Members:</h5>
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th scope="col">ID</th>
+                                        <th scope="col">Name</th>
+                                        <th scope="col">Contact Number</th>
+                                        <th scope="col">Email</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for member in team_members %}
+                                        <tr>
+                                            <td>{{ member.id }}</td>
+                                            <td>{{ member.name }}</td>
+                                            <td>{{ member.contactnumber }}</td>
+                                            <td>{{ member.email }}</td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="tab-pane fade" id="work-details" role="tabpanel" aria-labelledby="work-details-tab">
+                <!-- Work Details content -->
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Project Name</th>
+                            <th>Project Status</th>
+                            <th>Team ID</th>
+                            <th>Deadline</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for work_detail in work_details %}
+                            <tr>
+                                <td>{{ work_detail.id }}</td>
+                                <td>{{ work_detail.project_name }}</td>
+                                <td>{{ work_detail.project_status }}</td>
+                                <td>{{ work_detail.team_id }}</td>
+                                <td>{{ work_detail.deadline }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <div class="tab-pane fade" id="completion-status" role="tabpanel" aria-labelledby="completion-status-tab">
+                <!-- Completion Status content -->
+                <div class="dashboard">
+                    {% for work_detail in work_details %}
+                        <div class="panel {% if work_detail.project_status == 'Planning' %}waiting{% elif work_detail.project_status == 'Design' %}completed{% elif work_detail.project_status == 'Development' %}in-progress{% endif %}">
+                            <h2>{{ work_detail.project_name }}</h2>
+                            {% if work_detail.project_status == 'Planning' %}
+                                <div class="progress-circle"></div>
+                                <p>Planning</p>
+                                <p>In Progress</p>
+                            {% elif work_detail.project_status == 'Design' %}
+                                <div class="progress-circle"></div>
+                                <p>Design</p>
+                                <p>In Progress</p>
+                            {% elif work_detail.project_status == 'Development' %}
+                                <div class="progress-circle"></div>
+                                <p>Development</p>
+                                <p>In Progress</p>
+                            {% elif work_detail.project_status == 'Testing' %}
+                                <div class="progress-circle"></div>
+                                <p>Testing</p>
+                                <p>In Progress</p>
+                            {% endif %}
+                            <!-- Add more conditions for other statuses if needed -->
+                            <button class="btn btn-primary mt-3" data-toggle="modal" data-target="#updateStatusModal" onclick="prepareModal('{{ work_detail.project_name }}', '{{ work_detail.id }}')">Update Status</button>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS and dependencies -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+    <!-- Example function for updating status (replace with your actual update logic) -->
+    <script>
+        function prepareModal(projectName, projectId) {
+            // Set project name in the modal
+            document.getElementById('modalProjectName').textContent = projectName;
+            // Store project ID in a hidden input field for form submission
+            document.getElementById('projectId').value = projectId;
+        }
+
+        function updateStatus() {
+            // Get selected status from the dropdown
+            var status = document.getElementById('statusDropdown').value;
+            // Get project ID from the hidden input field
+            var projectId = document.getElementById('projectId').value;
+
+            // Example: Perform AJAX request to update the status
+            console.log('Updating status for project ID:', projectId, 'New status:', status);
+
+            // Close the modal after updating (if needed)
+            $('#updateStatusModal').modal('hide');
+
+            // For demonstration purposes, you can show a toast or alert message after updating
+            alert('Status updated successfully!');
+        }
+    </script>
+
+    <!-- Modal -->
+<div class="modal fade" id="updateStatusModal" tabindex="-1" role="dialog" aria-labelledby="updateStatusModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="updateStatusModalLabel">Update Status for <span id="modalProjectName"></span></h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="updateStatusForm">
+                    <div class="form-group">
+                        <label for="statusDropdown">Select Status:</label>
+                        <select class="form-control" id="statusDropdown" name="new_status">
+                            <option value="Planning">Planning</option>
+                            <option value="Design">Design</option>
+                            <option value="Development">Development</option>
+                            <option value="Testing">Testing</option>
+                        </select>
+                    </div>
+                    <input type="hidden" id="projectId" name="project_id">
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" onclick="submitUpdate()">Save changes</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- JavaScript to handle form submission -->
+<script>
+    function submitUpdate() {
+        var projectId = document.getElementById('projectId').value;
+        var newStatus = document.getElementById('statusDropdown').value;
+
+        // Prepare form data
+        var formData = new FormData();
+        formData.append('project_id', projectId);
+        formData.append('new_status', newStatus);
+
+        // Send POST request using fetch API
+        fetch('/update_project_status', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('Success:', data);
+            // Optionally update UI or close modal on success
+            $('#updateStatusModal').modal('hide'); // Hide modal using jQuery
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            // Handle error scenarios if needed
+        });
+    }
+    function closeOverlay() {
+    document.getElementById('overlay').style.display = 'none';
+}
+document.addEventListener('DOMContentLoaded', function() {
+    // Show overlay and bind save button click event
+    document.getElementById('change-password-link').addEventListener('click', function() {
+        document.getElementById('overlay').style.display = 'block';
+    });
+
+    // Handle form submission
+    document.getElementById('change-password-form').addEventListener('submit', function(event) {
+        event.preventDefault(); // Prevent default form submission
+        
+        // Validate passwords
+        var newPassword = document.getElementById('new-password').value;
+        var confirmPassword = document.getElementById('confirm-password').value;
+        
+        if (newPassword !== confirmPassword) {
+            alert("Passwords do not match!");
+            return;
+        }
+
+        // Prepare data for POST request
+        var formData = new FormData();
+        formData.append('new_password', newPassword);
+
+        // AJAX POST request
+        var xhr = new XMLHttpRequest();
+        xhr.open('POST', '/change_password', true);
+        xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest'); // Optional header
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState === XMLHttpRequest.DONE) {
+                if (xhr.status === 200) {
+                    alert('Password changed successfully!');
+                    closeOverlay();
+                } else {
+                    alert('Failed to change password. Please try again.');
+                }
+            }
+        };
+        xhr.send(formData);
+    });
+
+    // Close overlay function
+    function closeOverlay() {
+        document.getElementById('overlay').style.display = 'none';
+        document.getElementById('change-password-form').reset(); // Reset form fields
+    }
+});
+
+</script>
+</body>
+</html>

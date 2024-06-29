@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Projects Dashboard</title>
+    <!-- Bootstrap CSS -->
+
+    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        .container {
+            margin-top: 20px;
+        }
+        .top-bar {
+            background-color: #343a40;
+            color: white;
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .top-bar .logo {
+            display: flex;
+            align-items: center;
+        }
+        .top-bar .logo img {
+            height: 40px;
+            width: auto;
+            margin-right: 10px;
+        }
+        .top-bar .buttons {
+            display: flex;
+            align-items: center;
+        }
+        .top-bar .buttons .btn {
+            margin-left: 10px;
+        }
+        .nav-tabs .nav-link.active {
+            background-color: #343a40;
+            color: white;
+        }
+        .modal-content {
+            padding: 20px;
+        }
+        .tab-pane {
+            display: none;
+        }
+        .tab-pane.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="top-bar">
+        <div class="logo">
+            <img src="static/logo.png" alt="Company Logo">
+            CYPHERWAVE
+        </div>
+        <div class="buttons">
+            <a href="{{ url_for('manage_teams') }}" class="btn btn-light">Manage Teams</a>
+            <a href="{{ url_for('dashboard_administrator') }}" class="btn btn-light">Back to Administrator Dashboard</a>
+            <form action="/logout" method="post">                
+                <button type="submit" class="btn btn-light">Logout</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="container">
+        <h1 class="text-center">PROJECT DASHBOARD</h1>
+
+        <!-- Example tab navigation -->
+        <ul class="nav nav-tabs">
+            <li class="nav-item">
+                <a class="nav-link active" data-toggle="tab" href="#projects">Projects</a>
+            </li>
+            <!-- <li class="nav-item">
+                <a class="nav-link" data-toggle="tab" href="#tasks">Tasks</a>
+            </li> -->
+             
+            <!-- Add more tabs as needed -->
+        </ul>
+
+        <!-- Tab panes -->
+        <div class="tab-content">
+            <div id="projects" class="tab-pane active">
+                <!-- Project management content -->
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Projects</h5>
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Project Name</th>
+                                        <th>Project Status</th>
+                                        <th>Team ID</th>
+                                        <th>Deadline</th>
+                                        <th>Action</th> <!-- New column for delete button -->
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for project in projects %}
+                                    <tr>
+                                        <td>{{ project.id }}</td>
+                                        <td>{{ project.project_name }}</td>
+                                        <td>{{ project.project_status }}</td>
+                                        <td>{{ project.team_id }}</td>
+                                        <td>{{ project.deadline }}</td>
+                                        <td>
+                                            <!-- Delete button with data-id attribute -->
+                                            <button type="button" class="btn btn-danger btn-sm delete-project" data-id="{{ project.id }}">Delete</button>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        <!-- Button to trigger modal for adding a new project -->
+                        <div class="text-center mt-3">
+                            <button type="button" class="btn btn-success" data-toggle="modal" data-target="#addProjectModal">Add Project</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div id="tasks" class="tab-pane">
+                <!-- Task management content -->
+                <!-- Example: Display list of tasks -->
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Task 1</h5>
+                        <p class="card-text">Task details go here.</p>
+                        <a href="#" class="btn btn-primary">View Details</a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Add more tab panes for different sections -->
+        </div>
+    </div>
+
+    <!-- Bootstrap JS and jQuery -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+    <!-- Modal for adding project -->
+    <div class="modal fade" id="addProjectModal" tabindex="-1" role="dialog" aria-labelledby="addProjectModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addProjectModalLabel">Add New Project</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <form id="addProjectForm" action="/add-project" method="POST">
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label for="project_name">Project Name</label>
+                            <input type="text" class="form-control" id="project_name" name="project_name" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="project_status">Project Status</label>
+                            <select class="form-control" id="project_status" name="project_status" required>
+                                <option value="Planning">Planning</option>
+                                <option value="Design">Design</option>
+                                <option value="Development">Development</option>
+                                <option value="Testing">Testing</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="team_id">Team</label>
+                            <select class="form-control" id="team_id" name="team_id" required>
+                                {% for team in teams %}
+                                <option value="{{ team.id }}">{{ team.team_name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="deadline">Deadline</label>
+                            <input type="date" class="form-control" id="deadline" name="deadline" required>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary">Add Project</button>
+                    </div>
+                </form>
+                
+            </div>
+        </div>
+    </div>
+</body>
+<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+<script>
+    // jQuery document ready function
+    jQuery(document).ready(function() {
+        // AJAX call to delete project
+        jQuery('.delete-project').click(function() {
+            var projectId = jQuery(this).data('id');  // Get project ID from data-id attribute
+            var confirmation = confirm("Are you sure you want to delete this project?");
+            
+            if (confirmation) {
+                jQuery.ajax({
+                    url: '/delete-project/' + projectId,  // Replace with your Flask route for deleting project
+                    type: 'DELETE',
+                    success: function(response) {
+                        alert('Project deleted successfully!');
+                        window.location.reload();  // Reload page after deletion
+                    },
+                    error: function(xhr, status, error) {
+                        alert('Error deleting project: ' + error);
+                    }
+                });
+            }
+        });
+    });
+    jQuery(document).ready(function() {
+        // Example AJAX call to fetch team data
+        jQuery.ajax({
+            url: '/get-teams',  // Replace with your Flask route to fetch teams
+            type: 'GET',
+            success: function(data) {
+                // Assuming data is an array of teams [{id: 1, team_name: 'Team A'}, {id: 2, team_name: 'Team B'}, ...]
+                data.forEach(function(team) {
+                    jQuery('#teamId').append(jQuery('<option>', {
+                        value: team.id,
+                        text: team.team_name
+                    }));
+                });
+            },
+            error: function(xhr, status, error) {
+                console.error('Error fetching teams:', error);
+            }
+        });
+    });
+    jQuery('#addProjectForm').submit(function(event) {
+        event.preventDefault();  // Prevent default form submission
+        
+        jQuery.ajax({
+            type: 'POST',
+            url: '/add-project',
+            data: jQuery(this).serialize(),  // Serialize form data
+            success: function(response) {
+                alert('Project added successfully!');
+                window.location.reload();  // Reload page after adding project
+            },
+            error: function(xhr, status, error) {
+                alert('Error adding project: ' + error);
+            }
+        });
+    });
+</script>
+</html>

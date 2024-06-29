@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Register</title>
+<link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
+<link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+<div class="container">
+    <img src="{{ url_for('static', filename='logo1.png') }}" alt="Your Logo" class="logo">
+    <h1>Register</h1>
+    <form id="registerForm" method="post" action="/register">
+        <input type="text" name="username" placeholder="Username" required><br>
+        <input type="password" name="password" id="password" placeholder="Password" required><br>
+        <input type="password" name="confirm_password" id="confirm_password" placeholder="Confirm Password" required><br>
+        <input type="text" name="name" placeholder="Name" required><br>
+        <input type="text" name="contact_number" placeholder="Contact Number" required><br>
+        <input type="email" name="email" placeholder="Email" required><br>
+        <select name="role" id="role" required>
+            <option value="" disabled selected>Select Role</option>
+            <option value="employee">Employee</option>
+            <option value="manager">Manager</option>
+            <option value="administrator">Administrator</option>
+        </select><br>
+        <input type="submit" value="Register">
+    </form>
+    {% if error %}
+        <p id="error" class="error">{{ error }}</p>
+    {% endif %}
+</div>
+<script>
+    document.getElementById('registerForm').addEventListener('submit', function(event) {
+        var password = document.getElementById('password').value;
+        var confirm_password = document.getElementById('confirm_password').value;
+        if (password !== confirm_password) {
+            event.preventDefault(); // Prevent form submission
+            document.getElementById('error').textContent = 'Passwords do not match.';
+            document.getElementById('error').style.display = 'block'; // Show the error message
+        }
+    });
+</script>
+</body>
+</html>
